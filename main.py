@@ -18,4 +18,3 @@ if __name__ == "__main__":
         print(result)
     else:
         print("Failed to generate the report. Please try again later.")
-

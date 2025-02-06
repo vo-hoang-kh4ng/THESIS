@@ -25,4 +25,11 @@ def create_tasks(brand_name, agents):
         expected_output="A comprehensive report structured as follows: \n1. Executive Summary\n2. Brand Overview\n3. Social Media Presence Analysis\n4. Sentiment Analysis\n5. Key Insights\n6. Recommendations for Improvement\n7. Conclusion"
     )
 
-    return [research_task, monitoring_task, sentiment_analysis_task, report_generation_task]
+    # Nhiệm vụ cho Agent Coordinator (giả sử rằng Agent Coordinator là phần tử thứ 5 trong danh sách agents)
+    coordinator_task = Task(
+        description=f"Aggregate and synthesize the outputs from all specialist agents to provide a final comprehensive analysis on {brand_name}.",
+        agent=agents[4],
+        expected_output="A final aggregated report that combines and refines the outputs of the specialist agents, delivering a cohesive analysis and actionable insights on {brand_name}."
+    )
+
+    return [research_task, monitoring_task, sentiment_analysis_task, report_generation_task, coordinator_task]
