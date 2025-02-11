@@ -1,10 +1,7 @@
 import os
-from dotenv import load_dotenv
 from my_utils import run_social_media_monitoring
 
 # Load các biến môi trường từ .env
-load_dotenv()
-
     
 if __name__ == "__main__":
     print("Welcome to the Social Media Monitoring Crew!")
@@ -18,3 +15,5 @@ if __name__ == "__main__":
         print(result)
     else:
         print("Failed to generate the report. Please try again later.")
+
+

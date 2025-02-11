@@ -1,35 +1,82 @@
 from crewai import Task
 
 def create_tasks(brand_name, agents):
+    tasks = []
+    
+    # Nhiệm vụ cho Specialist Agents (giả sử các Specialist là 4 Agent đầu tiên)
+    researcher = next(agent for agent in agents if agent.role == "Social Media Researcher")
     research_task = Task(
-        description=f"Research {brand_name} and provide a summary of their online presence, key information, and recent activities.",
-        agent=agents[0],
-        expected_output="A structured summary containing: \n1. Brief overview of {brand_name}\n2. Key online platforms and follower counts\n3. Recent notable activities or campaigns\n4. Main products or services\n5. Any recent news or controversies"
+        description=f"Research {brand_name} and provide a detailed summary of their online presence, key information, and recent activities.",
+        agent=researcher,
+        expected_output="A structured summary containing key data points and insights about {brand_name}."
     )
-
+    
+    monitor = next(agent for agent in agents if agent.role == "Social Media Monitor")
     monitoring_task = Task(
-        description=f"Monitor social media platforms for mentions of '{brand_name}' in the last 24 hours. Provide a summary of the mentions.",
-        agent=agents[1],
-        expected_output="A structured report containing: \n1. Total number of mentions\n2. Breakdown by platform (e.g., Twitter, Instagram, Facebook)\n3. Top 5 most engaging posts or mentions\n4. Any trending hashtags associated with {brand_name}\n5. Notable influencers or accounts mentioning {brand_name}"
+        description=f"Monitor social media platforms for detailed metrics and engagement data about {brand_name}.",
+        agent=monitor,
+        expected_output="A detailed report with metrics and engagement data on {brand_name}."
     )
-
-    sentiment_analysis_task = Task(
-        description=f"Analyze the sentiment of the social media mentions about {brand_name}. Categorize them as positive, negative, or neutral.",
-        agent=agents[2],
-        expected_output="A sentiment analysis report containing: \n1. Overall sentiment distribution (% positive, negative, neutral)\n2. Key positive themes or comments\n3. Key negative themes or comments\n4. Any notable changes in sentiment compared to previous periods\n5. Suggestions for sentiment improvement if necessary"
+    
+    sentiment = next(agent for agent in agents if agent.role == "Sentiment Analyzer")
+    sentiment_task = Task(
+        description=f"Perform an in-depth sentiment analysis on the social media mentions of {brand_name}.",
+        agent=sentiment,
+        expected_output="A detailed sentiment analysis report with percentages and key themes."
     )
-
-    report_generation_task = Task(
-        description=f"Generate a comprehensive report about {brand_name} based on the research, social media mentions, and sentiment analysis. Include key insights and recommendations.",
-        agent=agents[3],
-        expected_output="A comprehensive report structured as follows: \n1. Executive Summary\n2. Brand Overview\n3. Social Media Presence Analysis\n4. Sentiment Analysis\n5. Key Insights\n6. Recommendations for Improvement\n7. Conclusion"
+    
+    report = next(agent for agent in agents if agent.role == "Report Generator")
+    report_task = Task(
+        description=f"Generate a comprehensive report about {brand_name} based on the gathered research and analysis.",
+        agent=report,
+        expected_output="A comprehensive report including executive summary, data analysis, and recommendations."
     )
-
-    # Nhiệm vụ cho Agent Coordinator (giả sử rằng Agent Coordinator là phần tử thứ 5 trong danh sách agents)
+    
+    tasks.extend([research_task, monitoring_task, sentiment_task, report_task])
+    
+    # Nhiệm vụ cho Coordinator Agent
+    coordinator = next(agent for agent in agents if agent.role == "Coordinator")
     coordinator_task = Task(
-        description=f"Aggregate and synthesize the outputs from all specialist agents to provide a final comprehensive analysis on {brand_name}.",
-        agent=agents[4],
-        expected_output="A final aggregated report that combines and refines the outputs of the specialist agents, delivering a cohesive analysis and actionable insights on {brand_name}."
+        description=f"Aggregate and synthesize the outputs from all specialist agents to produce a final comprehensive analysis on {brand_name}.",
+        agent=coordinator,
+        expected_output="A final aggregated report that combines all insights and provides a coherent overall analysis."
     )
-
-    return [research_task, monitoring_task, sentiment_analysis_task, report_generation_task, coordinator_task]
+    tasks.append(coordinator_task)
+    
+    # Nhiệm vụ cho Support Agent
+    try:
+        support = next(agent for agent in agents if agent.role == "Support Agent")
+        support_task = Task(
+            description=f"Provide supplementary support details and clarifications to ensure that the final report on {brand_name} is complete and addresses all relevant queries.",
+            agent=support,
+            expected_output="Additional support insights and clarifications that enrich the overall report."
+        )
+        tasks.append(support_task)
+    except StopIteration:
+        print("No Support Agent found; skipping support task.")
+    
+    # Nhiệm vụ cho Memory Agent
+    try:
+        memory = next(agent for agent in agents if agent.role == "Memory Agent")
+        memory_task = Task(
+            description=f"Store key insights and reasoning traces from the analysis on {brand_name} for future reference.",
+            agent=memory,
+            expected_output="A memory log containing all key insights and reasoning traces."
+        )
+        tasks.append(memory_task)
+    except StopIteration:
+        print("No Memory Agent found; skipping memory task.")
+    
+    # Nhiệm vụ cho Re-ranking Agent
+    try:
+        reranker = next(agent for agent in agents if agent.role == "Re-ranking Agent")
+        reranking_task = Task(
+            description=f"Re-rank and evaluate candidate outputs from all agents to produce the most coherent and detailed final report for {brand_name}.",
+            agent=reranker,
+            expected_output="A refined final report that integrates and optimizes the outputs from all agents."
+        )
+        tasks.append(reranking_task)
+    except StopIteration:
+        print("No Re-ranking Agent found; skipping reranking task.")
+    
+    return tasks
