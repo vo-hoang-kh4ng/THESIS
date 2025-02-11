@@ -1,99 +1,28 @@
-Final Report:
-**FPT Telecom Comprehensive Report: Brand Perception and Social Media Analysis**
+# Multi-AI-Agent Systems with CrewAI Guidelines
 
-**1. Executive Summary:**
+This repository demonstrates a multi-level AI Agent system built with CrewAI that performs comprehensive social media monitoring and brand analysis. The system applies key CrewAI principles—**Role Playing, Focus, Tools, Cooperation, Guardrails, Memory**—to create a robust chain-of-agents framework. It integrates several specialized agents and supporting agents to not only gather and analyze data but also aggregate, refine, and optimize the final output.
 
-This report analyzes FPT Telecom's brand perception based on social media data and sentiment analysis conducted as of October 26, 2024. FPT Telecom enjoys a largely positive brand image, driven by reliable service (particularly in urban areas), competitive pricing, and wide coverage. However, challenges remain in addressing technical issues (especially in rural areas), improving customer service responsiveness, and streamlining billing processes.  Recommendations focus on proactive communication, customer service enhancement, targeted infrastructure investment, and robust social media monitoring to further strengthen brand reputation.
+## Features
 
+- **Multi-Level Agent Architecture:**
+  - **Specialist Agents:**
+    - **Social Media Researcher:** Gathers comprehensive information about the brand from diverse sources.
+    - **Social Media Monitor:** Monitors social media platforms and extracts detailed engagement metrics.
+    - **Sentiment Analyzer:** Performs in-depth sentiment analysis on social media mentions.
+    - **Report Generator:** Generates structured reports based on the collected analyses.
+  - **Coordinator Agent:** Aggregates and synthesizes outputs from all specialist agents to produce a final comprehensive analysis.
+  - **Supporting Agents:**
+    - **Support Agent:** Provides additional context and clarifications to ensure completeness of the analysis.
+    - **Memory Agent:** Stores important insights and reasoning traces for future reference.
+    - **Re-ranking Agent:** Evaluates and reorders outputs from other agents to produce the optimal final report.
 
-**2. Brand Overview:**
+- **CrewAI Guidelines Implementation:**
+  - **Role Playing:** Each agent is assigned a clear role, goal, and backstory to ensure they "act" according to their designated responsibilities.
+  - **Focus:** Agents are prompted to concentrate on their specific tasks, delivering complete and accurate results.
+  - **Tools:** Agents can leverage integrated tools (e.g., `SerperDevTool`) for data retrieval and analysis.
+  - **Cooperation:** Agents can cooperate and delegate tasks where necessary, ensuring a cohesive workflow.
+  - **Guardrails:** Built-in guidelines ensure that all responses are thorough and free from assumptions.
+  - **Memory:** The system supports storing and retrieving past interactions to provide context-aware decision-making.
 
-FPT Telecom is a major telecommunications provider in Vietnam (hypothetical market share and position information would be included here in a real report). The company offers a range of internet and related services, targeting both residential and business customers.  Its market position and competitive landscape would be detailed here based on real-world data.
+## Pipeline Architecture
 
-
-**3. Social Media Presence Analysis:**
-
-FPT Telecom maintains a robust presence across multiple social media platforms.  As of October 26, 2024, the company boasts the following metrics (hypothetical data):
-
-* **Facebook:**  Follower count: 1,250,000; Average engagement rate: 5%;  Reach per post (organic): 50,000 - 100,000; Reach per post (paid): 200,000 - 300,000
-* **Instagram:** Follower count: 750,000; Average engagement rate: 8%; Reach per post (organic): 25,000-50,000; Reach per post (paid): 100,000-150,000
-* **YouTube:** Subscriber count: 200,000; Average viewership per video: 10,000-20,000;  Average engagement rate: 3%
-* **LinkedIn:** Follower count: 50,000; Average engagement rate: 2%;  Reach per post (organic): 5,000-10,000; Reach per post (paid): 20,000-30,000
-* **TikTok:** Follower count: 300,000; Average engagement rate: 12%; Reach per post (organic): 10,000-20,000; Reach per post (paid): 50,000-75,000
-
-
-**4. Sentiment Analysis:**
-
-Based on the analyzed social media data:
-
-* **Overall Sentiment:**  The overall sentiment towards FPT Telecom is predominantly positive (55%), with a smaller percentage expressing negative (25%) or neutral (20%) sentiments.
-
-* **Positive Sentiment Drivers:** The main drivers of positive sentiment are reliable internet service (especially in urban areas), positive customer service experiences (for specific issues), competitive pricing, and wide network coverage.  Examples:  "Just switched to FPT...speed is incredible!" and "Excellent customer service!"
-* **Negative Sentiment Drivers:**  Negative sentiment stems from occasional technical issues (internet outages, slow speeds, particularly in rural areas), negative customer service interactions (long wait times, unhelpful staff for certain issues), and billing problems (inaccurate charges, payment difficulties).  Examples: "Internet has been down for 3 days!" and "Endless hold music and no resolution."
-* **Sentiment Trends:** Analysis reveals a correlation between negative sentiment and reports of inconsistent service in rural areas, suggesting a need for infrastructure upgrades in those regions. Billing-related complaints also show a concerning trend.
-
-
-**5. Key Insights:**
-
-* **Strong Brand Foundation:** FPT Telecom enjoys a strong positive reputation built on its reliable service and competitive offerings, primarily in urban areas.
-* **Customer Service Gaps:**  While positive customer service experiences are reported, negative experiences, especially related to response times and resolution effectiveness, highlight areas needing improvement.
-* **Infrastructure Investment (Geographic Focus):**  Investment in infrastructure is essential to maintain service reliability, particularly in rural areas, to address widespread service inconsistency reports.
-* **Billing Process Optimization:**  Simplifying the billing process and ensuring accuracy will minimize customer frustration.
-* **Proactive Communication:**  Proactive communication during outages or service disruptions is essential for managing customer expectations.  
-
-
-**6. Recommendations for Improvement:**
-
-* **Enhance Customer Service:** Invest in training and implement efficient ticketing systems. Provide multiple support channels.
-* **Improve Network Infrastructure (Targeted):** Prioritize infrastructure upgrades in rural areas to address reported service inconsistencies.  Proactively monitor network performance.
-* **Streamline Billing Processes:** Simplify the system and ensure accurate billing statements. Offer accessible payment options.
-* **Proactive Communication Strategy:** Implement a robust communication plan to inform customers of outages and provide regular updates.       
-* **Robust Social Media Monitoring:** Implement a system to track brand mentions, analyze sentiment, and respond quickly to customer queries and complaints.
-
-
-
-**7. Conclusion:**
-
-FPT Telecom has a strong foundation for continued success.  By addressing the identified areas for improvement, particularly in customer service, targeted infrastructure upgrades in rural areas, and proactive communication, the company can further strengthen its brand reputation. Ongoing social media monitoring and a commitment to customer satisfaction are essential.
-
-
-
-
-==================================================
-
-Final Report:
-## FPT Corporation: Brand Perception Analysis & Recommendations
-
-**Executive Summary:**
-
-This report analyzes the hypothetical online sentiment surrounding FPT Corporation, a leading Vietnamese IT company.  Based on projected data, the sentiment is predominantly positive (60%), driven by strong technological capabilities, positive employee experiences, and successful projects. However, significant neutral (30%) and negative (10%) sentiment exists, primarily concerning compensation, work-life balance, and customer service.  The lack of real-time data significantly limits the accuracy of this analysis.  Recommendations focus on robust social media monitoring, proactive engagement, and improved communication transparency.
-
-**Brand Overview:**
-
-FPT Corporation is a global IT services and solutions provider, operating domestically and internationally.  The company's strong brand recognition necessitates understanding its online reputation and public perception for effective strategic decision-making.
-
-**Hypothetical Social Media Presence:**
-
-Hypothetically, FPT maintains a moderate to high level of engagement across multiple platforms.  However, without access to concrete data (follower counts, engagement rates), these observations remain speculative.  Real-time data would provide a more accurate assessment.
-
-**Hypothetical Sentiment Analysis:**
-
-The projected positive sentiment stems from successful projects, positive employee feedback, and technological expertise.  The neutral sentiment indicates a need for clearer communication, while negative feedback highlights issues with compensation, work-life balance, and customer service.
-
-**Key Insights & Areas for Improvement:**
-
-* **Strengths:** Strong technological capabilities, positive employee experiences, successful projects, and a generally positive brand reputation.
-* **Weaknesses:** Concerns regarding compensation, work-life balance, and customer service require immediate attention.  The lack of real-time social media data hinders accurate analysis.
-
-**Recommendations:**
-
-* **Implement robust social media monitoring:**  Utilize a comprehensive platform to track mentions and sentiment in real-time.
-* **Proactive engagement:**  Respond promptly and empathetically to negative feedback, offering solutions and demonstrating transparency.       
-* **Enhanced communication:**  Regularly share company updates, achievements, and address concerns transparently with employees and customers.  
-* **Targeted content strategy:**  Develop a strategy highlighting achievements, employee success, and proactively addressing common concerns.   
-* **Employee advocacy program:**  Encourage employees to share positive experiences online.
-* **Regular sentiment analysis:**  Conduct regular analysis to adapt strategies and address evolving perceptions.
-
-**Conclusion:**
-
-While this analysis suggests a generally positive brand image for FPT, significant limitations exist due to the lack of real-time data.  Implementing the recommended strategies will improve online reputation, enhance customer and employee satisfaction, and solidify FPT's position as an industry leader.  A transition to a real-time data-driven approach is crucial for accurate and effective brand management.
