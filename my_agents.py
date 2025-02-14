@@ -23,7 +23,7 @@ search_tool = MySerperDevTool()
 def create_llm():
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
     # Sử dụng Gemini model với cú pháp "provider/llm-name"
-    return LLM(api_key=GEMINI_API_KEY, model="gemini/gemini-1.5-flash")
+    return LLM(api_key=GEMINI_API_KEY, model="gemini/gemini-2.0-flash-exp")
 
 # Các Agent chuyên môn với các quy tắc CrewAI
 def create_specialist_agents(brand_name, llm):

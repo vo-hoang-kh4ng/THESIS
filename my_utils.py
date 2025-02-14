@@ -1,5 +1,5 @@
 import time
-from crewai import Crew
+from crewai import Crew,Process
 from my_agents import create_llm, create_agents
 from tasks import create_tasks
 def run_social_media_monitoring(brand_name, max_retries=3):
@@ -11,7 +11,10 @@ def run_social_media_monitoring(brand_name, max_retries=3):
         agents=agents,
         tasks=tasks,
         verbose=True,
-        memory=False  # Kích hoạt tính năng Memory cho toàn bộ crew
+        memory=False # Kích hoạt tính năng Memory cho toàn bộ crew
+        # planning=True,
+        # planning_llm= llm
+        #process=Process.sequential
     )
     
     for attempt in range(max_retries):
