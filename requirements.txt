@@ -1,4 +1,3 @@
-python-dotenv
+searborn
 crewai
 crewai_tools
-langchain_community
