@@ -10,24 +10,96 @@ import pandas as pd
 import datetime
 import re
 import streamlit as st
+from my_twitter_tool import TwitterIngestionTool
+import networkx as nx
 
 # Hàng đợi để lưu dữ liệu mới nhất từ mạng xã hội
 data_queue = queue.Queue()
 
-def fetch_social_media_data(brand_name):
-    """Lấy dữ liệu thời gian thực từ mạng xã hội bằng SerperDevTool."""
-    from crewai_tools import SerperDevTool
-    search_tool = SerperDevTool()
+def fetch_data_twitter(brand_name: str, interval: int = 60):
+    """
+    Hàm chạy vòng lặp, mỗi interval giây gọi TwitterIngestionTool để lấy tweet.
+    """
+    tool = TwitterIngestionTool()
     while True:
         try:
-            # Tìm kiếm dữ liệu thực tế từ web liên quan đến brand_name
-            search_query = f"{brand_name} site:twitter.com OR site:instagram.com OR site:facebook.com -inurl:(login)"
-            result = search_tool.run(search_query=search_query)
-            data_queue.put(result)
-            time.sleep(60)  # Cập nhật mỗi 60 giây
+            result = tool.run(query=brand_name)
+            # Lưu vào queue
+            data_queue.put({"platform": "twitter", "data": result})
+            time.sleep(interval)
         except Exception as e:
-            print(f"Error fetching data: {e}")
-            time.sleep(60)
+            print(f"Twitter fetch error: {e}")
+            time.sleep(interval)
+def build_influencer_network(tweets):
+    """
+    Xây dựng mạng lưới ảnh hưởng từ danh sách bài đăng.
+    - Tạo node cho mỗi user.
+    - Kết nối các user dựa trên mentions.
+    """
+    G = nx.DiGraph()  # Tạo đồ thị có hướng
+
+    for tweet in tweets:
+        user = tweet["user"]  # Người đăng bài
+        mentions = tweet.get("mentions", [])  # Danh sách tài khoản được nhắc đến
+        
+        # Thêm user vào mạng lưới nếu chưa tồn tại
+        if user not in G:
+            G.add_node(user, mentions=[], tweets=1)
+        else:
+            G.nodes[user]["tweets"] += 1  # Cập nhật số bài đăng của user
+
+        # Kết nối user với các mentions
+        for mentioned_user in mentions:
+            if mentioned_user not in G:
+                G.add_node(mentioned_user, mentions=[], tweets=0)  # Nếu chưa có, thêm vào
+            G.add_edge(user, mentioned_user)  # Tạo kết nối user → mentioned_user
+            
+            # Lưu lại danh sách mentions cho mỗi user
+            G.nodes[user]["mentions"].append(mentioned_user)
+
+    return G
+
+def analyze_influencer_network(G):
+    """Phân tích mạng lưới ảnh hưởng"""
+    pagerank = nx.pagerank(G)  # Tính PageRank
+    betweenness = nx.betweenness_centrality(G)  # Tính betweenness centrality
+
+    influencers = []
+    for user in G.nodes():
+        influencers.append({
+            "user": user,
+            "pagerank": pagerank[user],
+            "betweenness": betweenness[user],
+            "tweets": G.nodes[user]["tweets"],
+            "mentions": G.nodes[user]["mentions"]
+        })
+
+    influencers = sorted(influencers, key=lambda x: x["pagerank"], reverse=True)
+    return influencers
+def display_influencer_graph(G):
+    """
+    Vẽ biểu đồ mạng lưới ảnh hưởng.
+    - Không sử dụng sentiment (tất cả node có màu giống nhau).
+    """
+    plt.figure(figsize=(10, 6))
+    pos = nx.spring_layout(G)  # Tự động căn chỉnh vị trí nodes
+    
+    nx.draw(G, pos, with_labels=True, node_size=500, node_color="gray", font_size=8, edge_color="gray")
+    plt.title("Influencer Network")
+    st.pyplot(plt)
+def find_top_influencers(tweets):
+    """Xác định danh sách top influencers và top opposers từ mạng xã hội"""
+    G = build_influencer_network(tweets)  # Xây dựng mạng lưới
+    influencers = analyze_influencer_network(G)  # Phân tích mạng
+
+    # Lọc ra top influencers (nếu ít hơn 5, trả về tất cả)
+    top_influencers = influencers[:5] if len(influencers) >= 5 else influencers
+
+    # Lọc ra top opposers (nếu ít hơn 5, trả về tất cả)
+    top_opposers = influencers[-5:] if len(influencers) >= 5 else influencers
+
+    return top_influencers, top_opposers, G  # ✅ Đảm bảo luôn trả về 3 giá trị
+
 def parse_negative_percentage(result):
     try:
         matches = re.findall(r'negative sentiment[^%]*?(\d+)%', str(result), re.IGNORECASE)
@@ -35,6 +107,7 @@ def parse_negative_percentage(result):
     except Exception as e:
         print(f"⚠️ Parse error: {e}")
         return 0
+
 def plot_mentions_and_sentiment(time_series_data):
     if len(time_series_data) < 2:
         st.warning("⚠️ Not enough data points to generate a trend chart.")
@@ -71,8 +144,9 @@ def run_social_media_monitoring(brand_name, max_retries=3):
         process=Process.sequential
     )
 
+    # SỬA ĐOẠN DƯỚI ĐÂY: Đổi fetch_social_media_data → fetch_data_twitter
     if not hasattr(run_social_media_monitoring, "data_thread"):
-        data_thread = threading.Thread(target=fetch_social_media_data, args=(brand_name,), daemon=True)
+        data_thread = threading.Thread(target=fetch_data_twitter, args=(brand_name,), daemon=True)
         data_thread.start()
         run_social_media_monitoring.data_thread = data_thread
 
@@ -92,12 +166,14 @@ def run_social_media_monitoring(brand_name, max_retries=3):
             # ✅ FIX: Đảm bảo lấy đúng báo cáo từ Re-ranking Agent
             if "Agent: Re-ranking Agent" in result_str:
                 re_ranking_start = result_str.index("Agent: Re-ranking Agent")
-                full_report = result_str[re_ranking_start:]  # Lấy báo cáo từ Re-ranking Agent
+                full_report = result_str[re_ranking_start:]
             else:
                 full_report = result_str
+
             # ✅ FIX: Lấy đúng số % negative sentiment
             negative_percentage = parse_negative_percentage(result_str)
-            crisis_detected = negative_percentage > 50  
+            crisis_detected = negative_percentage > 50
+
             # ✅ Lưu dữ liệu time-series để vẽ biểu đồ
             time_series_data.append({
                 "Date": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
