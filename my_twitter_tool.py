@@ -5,6 +5,7 @@ from crewai.tools import BaseTool
 from pydantic import Field
 from pydantic.config import ConfigDict
 
+# Improved TwitterIngestionTool class
 class TwitterIngestionTool(BaseTool):
     name: str = "twitter_ingestion_tool"
     description: str = "Fetch tweets or user data from Twitter (X) via official API."
@@ -44,6 +45,7 @@ class TwitterIngestionTool(BaseTool):
                     "favorite_count": t.favorite_count
                 })
             return str(results)
+        except tweepy.TweepError as e:
+            return f"Twitter API error: {e}"
         except Exception as e:
             return f"Error: {e}"
-

@@ -1,18 +1,19 @@
 from crewai import Task
 import time
 
-def create_tasks(brand_name, agents):
+# Improved task creation logic
+def create_tasks(brand_name, agents, twitter_data=None):
     tasks = []
     
-    # Nhiệm vụ cho Specialist Agents (4 Agent đầu tiên)
+    # Task for Social Media Researcher
     researcher = next(agent for agent in agents if agent.role == "Social Media Researcher")
     research_task = Task(
         description=(
-            f"Conduct a systematic real-time investigation of {brand_name}'s online presence, focusing on social media platforms, "
-            f"news articles, and public websites as of {time.strftime('%Y-%m-%d %H:%M:%S')}. Use search tools to collect raw data "
-            f"(e.g., posts, articles, mentions). Provide a detailed chain-of-thought (CoT) explanation documenting: (1) search queries used, "
-            f"(2) sources accessed, (3) data verification steps, and (4) synthesis process. Aim for a reproducible methodology suitable "
-            f"for scientific reporting and crisis monitoring."
+            f"Conduct a systematic real-time investigation of {brand_name}'s online presence using Twitter data: {twitter_data}. "
+            f"Focus on social media platforms, news articles, and public websites as of {time.strftime('%Y-%m-%d %H:%M:%S')}. "
+            f"Use search tools to collect raw data (e.g., posts, articles, mentions). Provide a detailed chain-of-thought (CoT) explanation "
+            f"documenting: (1) search queries used, (2) sources accessed, (3) data verification steps, and (4) synthesis process. "
+            f"Aim for a reproducible methodology suitable for scientific reporting and crisis monitoring."
         ),
         agent=researcher,
         expected_output=(
@@ -22,6 +23,7 @@ def create_tasks(brand_name, agents):
         async_execution=True
     )
     
+    # Task for Social Media Monitor
     monitor = next(agent for agent in agents if agent.role == "Social Media Monitor")
     monitoring_task = Task(
         description=(
@@ -35,24 +37,35 @@ def create_tasks(brand_name, agents):
             f"A real-time detailed report with metrics and engagement data on {brand_name}, including a chain-of-thought explanation "
             "of your analysis process."
         ),
-        async_execution=True
+        async_execution=False,
+        context=[research_task]  # Ensure this task depends on the research task
     )
     
+    # Task for Sentiment Analyzer
     sentiment = next(agent for agent in agents if agent.role == "Sentiment Analyzer")
     sentiment_task = Task(
         description=(
             f"Perform a rigorous real-time sentiment analysis on social media mentions of {brand_name} using data from Researcher and Monitor. "
-            f"Categorize sentiments into positive, neutral, and negative, compute distribution percentages, and detect crisis signals "
-            f"(e.g., negative > 50%). Provide a detailed CoT explanation covering: (1) data inputs, (2) sentiment classification method, "
-            f"(3) percentage calculation, and (4) validation steps."
+        f"Use the 'sentiment_analysis_tool' to categorize sentiments into positive, neutral, and negative. "
+        f"Compute sentiment distribution percentages and detect crisis signals (e.g., negative > 50%). "
+        f"Provide a detailed chain-of-thought (CoT) explanation covering: "
+        f"(1) data inputs (e.g., raw text from social media mentions), "
+        f"(2) sentiment classification method (using the 'sentiment_analysis_tool'), "
+        f"(3) percentage calculation (e.g., 60% positive, 30% neutral, 10% negative), and "
+        f"(4) validation steps (e.g., cross-checking results with other tools or manual review)."
         ),
         agent=sentiment,
         expected_output=(
-            f"A real-time sentiment analysis report with percentages (e.g., 60% positive, 30% neutral, 10% negative), key themes, "
-            "crisis alerts if detected, and a comprehensive chain-of-thought reasoning trace."
-        )
+            f"A real-time sentiment analysis report with the following details: "
+        f"- Sentiment distribution percentages (e.g., 60% positive, 30% neutral, 10% negative). "
+        f"- Key themes or topics identified in the mentions. "
+        f"- Crisis alerts if detected (e.g., 'Crisis Detected: Negative sentiment > 50%'). "
+        f"- A comprehensive chain-of-thought reasoning trace explaining the analysis process."
+        ),
+        context=[research_task, monitoring_task]  # Ensure this task depends on the research and monitoring tasks
     )
     
+    # Task for Report Generator
     report = next(agent for agent in agents if agent.role == "Report Generator")
     report_task = Task(
         description=(
@@ -65,12 +78,13 @@ def create_tasks(brand_name, agents):
         expected_output=(
             f"A real-time comprehensive report including executive summary, data analysis, recommendations, and crisis status, "
             "with a detailed chain-of-thought explanation of your reasoning."
-        )
+        ),
+        context=[research_task, monitoring_task, sentiment_task]  # Ensure this task depends on the previous tasks
     )
     
     tasks.extend([research_task, monitoring_task, sentiment_task, report_task])
     
-    # Nhiệm vụ cho Coordinator Agent
+    # Task for Coordinator
     coordinator = next(agent for agent in agents if agent.role == "Coordinator")
     coordinator_task = Task(
         description=(
@@ -82,11 +96,12 @@ def create_tasks(brand_name, agents):
         expected_output=(
             f"A final real-time aggregated report combining all insights and chain-of-thought reasoning from specialist agents, "
             f"delivering a coherent and actionable crisis analysis for {brand_name}."
-        )
+        ),
+        context=[research_task, monitoring_task, sentiment_task, report_task]  # Ensure this task depends on all previous tasks
     )
     tasks.append(coordinator_task)
     
-    # Nhiệm vụ cho Support Agent
+    # Task for Support Agent
     try:
         support = next(agent for agent in agents if agent.role == "Support Agent")
         support_task = Task(
@@ -103,7 +118,7 @@ def create_tasks(brand_name, agents):
     except StopIteration:
         print("No Support Agent found; skipping support task.")
     
-    # Nhiệm vụ cho Memory Agent
+    # Task for Memory Agent
     try:
         memory = next(agent for agent in agents if agent.role == "Memory Agent")
         memory_task = Task(
@@ -118,7 +133,7 @@ def create_tasks(brand_name, agents):
     except StopIteration:
         print("No Memory Agent found; skipping memory task.")
     
-    # Nhiệm vụ cho Re-ranking Agent
+    # Task for Re-ranking Agent
     try:
         reranker = next(agent for agent in agents if agent.role == "Re-ranking Agent")
         reranking_task = Task(
@@ -139,7 +154,7 @@ def create_tasks(brand_name, agents):
     except StopIteration:
         print("No Re-ranking Agent found; skipping reranking task.")
     
-    # Nhiệm vụ cho Crisis Detector Agent (mới)
+    # Task for Crisis Detector Agent
     try:
         crisis_detector = next(agent for agent in agents if agent.role == "Crisis Detector")
         crisis_task = Task(

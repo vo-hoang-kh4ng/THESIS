@@ -10,53 +10,29 @@ from langchain_community.utilities import GoogleSerperAPIWrapper
 from crewai_tools import LlamaIndexTool
 from crewai_tools import CodeDocsSearchTool
 import litellm
-#litellm.set_verbose = True
+from transformers import pipeline
+from sentiment_tool import SentimentAnalysisTool
+from crewai_tools import SerperDevTool
+from exa_answer_tool import EXAAnswerTool
 
-load_dotenv()
-
-# Thiết lập biến môi trường
-os.environ["CREWAI_DISABLE_TELEMETRY"] = "1"
-#os.environ["LITELLM_LOG"] = "DEBUG"  # Bật log debug cho LiteLLM
-#pdf_path = "HootsuiteSocialTrends2025_Report_en_light_Talent-Brand.pdf"
-#pdf_trends = PDFKnowledgeSource(file_paths=[pdf_path])
-## Define a custom subclass to fix the search_query input type
 class MySerperDevTool(SerperDevTool):
     def run(self, **kwargs):
         if 'search_query' in kwargs and isinstance(kwargs['search_query'], dict):
             kwargs['search_query'] = kwargs['search_query'].get('description', str(kwargs['search_query']))
         return super().run(**kwargs)
+    
+exa_tool = EXAAnswerTool()
 
-# Sử dụng custom search tool
+    
+
+load_dotenv()
+os.environ["CREWAI_DISABLE_TELEMETRY"] = "1"
+
+
 search_tool = MySerperDevTool()
-# #query_engine = ...  # Query engine từ LlamaIndex
-# #query_tool = LlamaIndexTool.from_query_engine(
-#     query_engine,
-#     name="Brand Knowledge Tool",
-#     description="Use this tool to lookup data about the brand"
-# )
-
-#search = GoogleSerperAPIWrapper()
+sentiment_tool = SentimentAnalysisTool()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-# code_docs_tool = CodeDocsSearchTool(
-#     docs_url='https://atlasti.com/research-hub/sentiment-analysis-in-atlas-ti-web',  # Thay bằng URL tài liệu mã nguồn thực tế (nếu cần)
-#     config=dict(
-#         llm=dict(
-#             provider="google",
-#             config=dict(
-#                 model="gemini/gemini-pro",  # Mô hình LLM của Gemini
-#                 api_key=GEMINI_API_KEY
-#             )
-#         ),
-#         embedder=dict(
-#             provider="google",
-#             config=dict(
-#                 model="models/textembedding-004",  # Mô hình nhúng của Gemini
-#                 api_key=GEMINI_API_KEY,
-#                 task_type="retrieval_document"
-#             )
-#         )
-#     )
-# )
+
 
 def create_llm():
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -76,9 +52,8 @@ def create_specialist_agents(brand_name, llm):
         ),
         verbose=True,
         allow_delegation=False,
-        tools=[search_tool],
+        tools=[search_tool,exa_tool],
         llm=llm,
-        #knowledge_sources=[pdf_trends],
         max_iter=1
     )
 
@@ -110,7 +85,9 @@ def create_specialist_agents(brand_name, llm):
         verbose=True,
         allow_delegation=False,
         llm=llm,
+        tools = [search_tool,sentiment_tool],
         max_iter=1
+
     )
 
     report_generator = Agent(
@@ -148,8 +125,6 @@ def create_coordinator_agent(brand_name, llm):
         max_iter=1
     )
     return coordinator
-
-# Tạo các Agent bổ sung theo quy tắc CrewAI (ví dụ: Support, Memory, Re-ranking)
 def create_support_agent(brand_name, llm):
     support_agent = Agent(
         role="Support Agent",
@@ -227,5 +202,4 @@ def create_agents(brand_name, llm):
     memory = create_memory_agent(brand_name, llm)
     reranker = create_reranking_agent(brand_name, llm)
     crisis_detector = create_crisis_detector_agent(brand_name, llm)
-    # Giữ thứ tự: Specialists → Coordinator → Support → Memory → Re-ranking → Crisis Detector
     return specialists + [coordinator, support, memory, reranker, crisis_detector]
