@@ -1,4 +1,4 @@
-# exa_answer_tool.py
+
 import os
 import requests
 from crewai.tools import BaseTool
@@ -15,10 +15,14 @@ class EXAAnswerTool(BaseTool):
     answer_url: str = "https://api.exa.ai/answer"
 
     def _run(self, query: str):
+        api_key = os.getenv("EXA_API_KEY")
+        if not api_key:
+            return "Error: EXA_API_KEY environment variable is not set."
+
         headers = {
             "accept": "application/json",
             "content-type": "application/json",
-            "x-api-key": os.getenv("EXA_API_KEY")
+            "x-api-key": api_key
         }
         
         try:
@@ -26,22 +30,21 @@ class EXAAnswerTool(BaseTool):
                 self.answer_url,
                 json={"query": query, "text": True},
                 headers=headers,
+                timeout=10  
             )
-            response.raise_for_status() 
-        except requests.exceptions.HTTPError as http_err:
-            print(f"HTTP error occurred: {http_err}")
-            raise
-        except Exception as err:
-            print(f"Other error occurred: {err}")
-            raise
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            return f"Error: Failed to fetch answer from Exa - {str(e)}"
 
-        response_data = response.json()
-        answer = response_data.get("answer", "No answer found.")
-        citations = response_data.get("citations", [])
-        output = f"Answer: {answer}\n\n"
-        if citations:
-            output += "Citations:\n"
-            for citation in citations:
-                output += f"- {citation.get('title', 'No title')} ({citation.get('url', '')})\n"
-
-        return output
+        try:
+            response_data = response.json()
+            answer = response_data.get("answer", "No answer found.")
+            citations = response_data.get("citations", [])
+            output = f"Answer: {answer}\n\n"
+            if citations:
+                output += "Citations:\n"
+                for citation in citations:
+                    output += f"- {citation.get('title', 'No title')} ({citation.get('url', '')})\n"
+            return output
+        except ValueError:
+            return "Error: Invalid response format from Exa."
