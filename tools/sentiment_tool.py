@@ -4,7 +4,7 @@ from transformers import pipeline
 from crewai.tools import BaseTool
 from pydantic import Field
 from pydantic.config import ConfigDict
-from typing import ClassVar, Union, List
+from typing import Union, List, Dict
 from collections import Counter
 
 # Configure logging to write to a file for debugging
@@ -24,7 +24,21 @@ class SentimentAnalysisTool(BaseTool):
     name: str = "distilbert_sentiment_tool"
     description: str = "Analyze sentiment of a given text or list of texts using DistilBERT, categorize into positive/neutral/negative, compute distribution percentages, and detect crisis signals."
     model_config = ConfigDict(extra='allow')
-    sentiment_pipeline: ClassVar = pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
+
+    def __init__(self):
+        super().__init__()
+        try:
+            # Khởi tạo pipeline trong __init__ thay vì ClassVar
+            self.sentiment_pipeline = pipeline(
+                "sentiment-analysis",
+                model="distilbert-base-uncased-finetuned-sst-2-english",
+                device=-1,  # Sử dụng CPU; nếu có GPU, có thể đặt device=0
+                batch_size=16  # Xử lý hàng loạt để tăng hiệu suất
+            )
+            logging.info("Sentiment pipeline initialized successfully.")
+        except Exception as e:
+            logging.error(f"Failed to initialize sentiment pipeline: {str(e)}")
+            raise RuntimeError(f"Failed to initialize sentiment pipeline: {str(e)}")
 
     def _run(self, text: Union[str, List[str]] = None, **kwargs) -> str:
         """
@@ -46,16 +60,16 @@ class SentimentAnalysisTool(BaseTool):
                 return f"Error: Input must be a string or list of strings, got {type(texts)}"
 
             # Step 2: Run sentiment analysis on each text
-            results = self.sentiment_pipeline(texts)
+            # Xử lý hàng loạt để tăng hiệu suất
+            results = self.sentiment_pipeline(texts, truncation=True, max_length=512)
             logging.info(f"Raw sentiment results: {results}")
 
             # Step 3: Map DistilBERT labels to expected categories (positive, neutral, negative)
-            # DistilBERT outputs POSITIVE or NEGATIVE; we'll map to positive/neutral/negative
             categorized_results = []
             for result in results:
                 label = result["label"]
                 score = result["score"]
-                # DistilBERT doesn't output "neutral" directly, so we use a threshold
+                # DistilBERT outputs POSITIVE or NEGATIVE; we'll map to positive/neutral/negative
                 if label == "POSITIVE":
                     sentiment = "positive" if score > 0.7 else "neutral"
                 else:  # NEGATIVE
@@ -66,9 +80,9 @@ class SentimentAnalysisTool(BaseTool):
             total = len(categorized_results)
             sentiment_counts = Counter(result["label"] for result in categorized_results)
             distribution = {
-                "positive": (sentiment_counts.get("positive", 0) / total) * 100,
-                "neutral": (sentiment_counts.get("neutral", 0) / total) * 100,
-                "negative": (sentiment_counts.get("negative", 0) / total) * 100
+                "positive": (sentiment_counts.get("positive", 0) / total) * 100 if total > 0 else 0,
+                "neutral": (sentiment_counts.get("neutral", 0) / total) * 100 if total > 0 else 0,
+                "negative": (sentiment_counts.get("negative", 0) / total) * 100 if total > 0 else 0
             }
 
             # Step 5: Detect crisis signals (negative > 50%)
@@ -80,9 +94,8 @@ class SentimentAnalysisTool(BaseTool):
             )
 
             # Step 6: Identify key themes (basic keyword extraction for now)
-            # This is a simple approach; you can enhance it with NLP techniques later
             all_text = " ".join(texts).lower()
-            common_words = ["good", "bad", "love", "hate", "great", "terrible"]
+            common_words = ["good", "bad", "love", "hate", "great", "terrible", "crisis", "problem", "excellent"]
             themes = {word: all_text.count(word) for word in common_words if word in all_text}
             key_themes = ", ".join(f"{word} ({count})" for word, count in themes.items()) or "None identified"
 
@@ -90,17 +103,20 @@ class SentimentAnalysisTool(BaseTool):
             cot = [
                 "Chain-of-Thought Explanation:",
                 "1. Data Inputs:",
-                f"   - Received {total} text(s): {texts}",
+                f"   - Received {total} text(s): {texts[:3]}{'...' if len(texts) > 3 else ''}",
                 "2. Sentiment Classification Method:",
                 "   - Used DistilBERT model (distilbert-base-uncased-finetuned-sst-2-english).",
                 "   - Mapped labels: POSITIVE (score > 0.7) -> positive, NEGATIVE (score > 0.7) -> negative, else neutral.",
-                f"   - Raw results: {results}",
-                f"   - Categorized results: {categorized_results}",
+                f"   - Raw results: {results[:3]}{'...' if len(results) > 3 else ''}",
+                f"   - Categorized results: {categorized_results[:3]}{'...' if len(categorized_results) > 3 else ''}",
                 "3. Percentage Calculation:",
                 f"   - Positive: {distribution['positive']:.2f}% ({sentiment_counts.get('positive', 0)}/{total})",
                 f"   - Neutral: {distribution['neutral']:.2f}% ({sentiment_counts.get('neutral', 0)}/{total})",
                 f"   - Negative: {distribution['negative']:.2f}% ({sentiment_counts.get('negative', 0)}/{total})",
-                "4. Validation Steps:",
+                "4. Theme Identification Process:",
+                f"   - Extracted common words: {common_words}",
+                f"   - Identified themes: {themes}",
+                "5. Validation Steps:",
                 "   - Cross-checked scores with confidence thresholds (0.7 for positive/negative).",
                 "   - Ensured all texts were processed without errors."
             ]
@@ -122,5 +138,11 @@ class SentimentAnalysisTool(BaseTool):
             return final_output
 
         except Exception as e:
-            logging.error(f"Sentiment analysis failed: {e}")
-            return f"Error: {e}"
+            logging.error(f"Sentiment analysis failed: {str(e)}", exc_info=True)
+            return f"Error: Sentiment analysis failed with exception: {str(e)}"
+
+    async def _arun(self, text: Union[str, List[str]] = None, **kwargs) -> str:
+        """
+        Asynchronous version of the sentiment analysis tool (not implemented).
+        """
+        raise NotImplementedError("Async run not implemented for SentimentAnalysisTool")

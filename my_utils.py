@@ -10,7 +10,10 @@ import json
 from crewai import Crew, Process
 from my_agents import create_llm, create_agents
 from tasks import create_tasks
+import agentops
+import os
 
+agentops.init(api_key=os.environ["AGENTOPS_API_KEY"], auto_start_session=False)
 # Hàm tìm top influencers từ tweets
 def find_top_influencers(tweets):
     """
@@ -244,3 +247,11 @@ def run_social_media_monitoring(brand_name, max_retries=3):
             time.sleep(10)
 
     return None, False, 0
+
+try: 
+  print("\n\nStarting the task...\n\n")
+  agentops.start_session()
+  agentops.end_session("Success")
+  print("\n\nTask completed.\n\n")
+except Exception as e:
+  agentops.end_session("Fail", str(e))

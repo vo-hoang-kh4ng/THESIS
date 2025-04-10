@@ -15,6 +15,10 @@ from tools.serper_dev_tool import MySerperDevTool
 from tools.my_twitter_tool import TwitterFetchTool
 from tools.firecrawl_tool import FirecrawlTool
 from tools.youtube_search_tool import MyYoutubeSearchTool
+from langgraph.store.memory import InMemoryStore
+from crewai.tools import BaseTool
+from langmem import create_manage_memory_tool, create_search_memory_tool
+from pydantic import Field
 load_dotenv()
 os.environ["CREWAI_DISABLE_TELEMETRY"] = "1"
 
@@ -25,8 +29,33 @@ key_word_tool = DynamicKeywordExtractorTool()
 exa_tool = EXAAnswerTool()
 twitter_fetch_tool = TwitterFetchTool()
 youtube_search_tool = MyYoutubeSearchTool()
+
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+store = InMemoryStore()
+# class LangMemToolWrapper(BaseTool):
+#     name: str
+#     description: str
+#     structured_tool: object = Field(..., description="The underlying StructuredTool from langmem")  # Khai báo trường
+
+#     def __init__(self, structured_tool):
+#         super().__init__(
+#             name=structured_tool.name,
+#             description=structured_tool.description or "A memory management tool",
+#         )
+#         self.structured_tool = structured_tool
+
+#     def _run(self, *args, **kwargs):
+#         return self.structured_tool.run(*args, **kwargs)
+
+# # Memory tools from LangMem, bọc trong wrapper
+# manage_memory_tool = LangMemToolWrapper(create_manage_memory_tool(namespace="brand_presence", store=store))
+# search_memory_tool = LangMemToolWrapper(create_search_memory_tool(namespace="brand_presence", store=store))
+
+# memory_tools = [manage_memory_tool, search_memory_tool]
+
+# memory_tools = [manage_memory_tool, search_memory_tool]
+
 
 def create_llm():
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -136,13 +165,14 @@ def create_support_agent(brand_name, llm):
     return support_agent
 
 def create_memory_agent(brand_name, llm):
+    
     memory_agent = Agent(
         role="Memory Agent",
         goal="Store and retrieve important data and reasoning traces from previous interactions.",
         backstory=(
-            "You are responsible for maintaining a long-term memory of all interactions. "
-            "Focus: Ensure that no critical information is lost, and that context is preserved for future decisions. "
-            "Guardrails: Data must be stored in an organized and retrievable format."
+            f"You are responsible for maintaining a long-term memory of all interactions and data related to {brand_name}. "
+            "Focus: Collect data from multiple sources and ensure it is stored in an organized, retrievable format for future analysis. "
+            "Guardrails: Verify data accuracy before storage; maintain consistency."
         ),
         verbose=True,
         allow_delegation=True,
