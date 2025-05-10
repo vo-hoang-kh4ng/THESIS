@@ -1,0 +1,141 @@
+tasks:
+  - task_name: "research_task"
+    description: >
+      Conduct a systematic investigation of {brand_name}'s online presence across multiple platforms.
+      Focus on recent social media activity, news coverage, and market trends.
+      Use memory tools to store and retrieve relevant historical data.
+    agent: "Social-Media-Researcher"
+    expected_output: >
+      A comprehensive research report including:
+      - Recent social media activity
+      - News coverage analysis
+      - Market trends and insights
+      - Historical context from memory
+    async_execution: false
+
+  - task_name: "monitoring_task"
+    description: >
+      Monitor and analyze social media metrics for {brand_name} across all platforms.
+      Track engagement, reach, and performance indicators.
+      Use memory tools to compare with historical performance.
+    agent: "Social-Media-Monitor"
+    expected_output: >
+      A detailed monitoring report including:
+      - Engagement metrics
+      - Reach statistics
+      - Performance indicators
+      - Historical comparisons
+    async_execution: false
+
+  - task_name: "sentiment_task"
+    description: >
+      Perform sentiment analysis on social media mentions of {brand_name}.
+      Analyze emotions, tone, and sentiment trends.
+      Use memory tools to identify sentiment patterns and changes.
+    agent: "Sentiment-Analyzer"
+    expected_output: >
+      A comprehensive sentiment analysis including:
+      - Sentiment distribution
+      - Emotion analysis
+      - Trend identification
+      - Historical sentiment patterns
+    async_execution: false
+
+  - task_name: "report_task"
+    description: >
+      Generate a comprehensive analysis report for {brand_name} based on all collected data.
+      Include executive summary, detailed analysis, and recommendations.
+      Use memory tools to ensure consistency with historical reports.
+    agent: "Report-Generator"
+    expected_output: >
+      A detailed report including:
+      - Executive summary
+      - Data analysis
+      - Recommendations
+      - Historical context
+    async_execution: false
+
+  - task_name: "coordinator_task"
+    description: >
+      Coordinate and synthesize outputs from all specialist agents for {brand_name}.
+      Ensure consistency and completeness of the final analysis.
+      Use memory tools to maintain data coherence.
+    agent: "Coordinator"
+    expected_output: >
+      A coordinated analysis including:
+      - Synthesized insights
+      - Cross-validation results
+      - Consistency checks
+      - Historical alignment
+    async_execution: false
+
+  - task_name: "support_task"
+    description: >
+      Provide supplementary support and clarifications for {brand_name}'s analysis.
+      Ensure accuracy and completeness of all findings.
+      Use memory tools to provide historical context.
+    agent: "Support-Agent"
+    expected_output: >
+      Support documentation including:
+      - Clarifications
+      - Additional context
+      - Historical references
+      - Validation checks
+    async_execution: false
+
+  - task_name: "memory_task"
+    description: >
+      Store and organize key insights from {brand_name}'s analysis.
+      Maintain a comprehensive knowledge base for future reference.
+      Use memory tools to ensure proper data organization.
+    agent: "Memory-Agent"
+    expected_output: >
+      Memory documentation including:
+      - Stored insights
+      - Pattern recognition
+      - Knowledge organization
+      - Historical connections
+    async_execution: false
+
+  - task_name: "reranking_task"
+    description: >
+      Optimize and re-rank the final report for {brand_name}.
+      Ensure critical information is properly prioritized.
+      Use memory tools to maintain consistency with historical reports.
+    agent: "Re-ranking-Agent"
+    expected_output: >
+      Optimized report including:
+      - Prioritized information
+      - Critical insights
+      - Historical alignment
+      - Consistency checks
+    async_execution: false
+    output_file: "final_report.md"
+
+  - task_name: "crisis_task"
+    description: >
+      Monitor and analyze potential crisis situations for {brand_name}.
+      Identify early warning signs and recommend response strategies.
+      Use memory tools to compare with historical crisis patterns.
+    agent: "Crisis-Detector"
+    expected_output: >
+      Crisis analysis including:
+      - Warning signs
+      - Impact assessment
+      - Response recommendations
+      - Historical crisis patterns
+    async_execution: false
+
+workflow:
+  name: "Social-Media-Monitoring-Workflow"
+  description: "Sequential workflow for social media monitoring and crisis detection"
+  tasks_order:
+    - research_task
+    - monitoring_task
+    - sentiment_task
+    - crisis_task
+    - report_task
+    - coordinator_task
+    - support_task
+    - memory_task
+    - reranking_task 

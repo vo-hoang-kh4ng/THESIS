@@ -1,0 +1,163 @@
+\section{Implementation}
+
+\subsection{Code Structure}
+The implementation follows a modular architecture with clear separation of concerns:
+
+\subsubsection{Core Components}
+\begin{itemize}
+    \item \textbf{Agent System}: Implemented in \texttt{agents.py}
+    \item \textbf{Task Pipeline}: Defined in \texttt{tasks.py}
+    \item \textbf{Flow Management}: Handled in \texttt{flows.py}
+    \item \textbf{Utility Functions}: Stored in \texttt{my\_utils.py}
+\end{itemize}
+
+\subsection{Agent Implementation}
+The agent system is built using CrewAI's framework, with each agent having specific roles and tools:
+
+\subsubsection{Agent Configuration}
+\begin{lstlisting}[language=Python]
+class TaskConfig:
+    def __init__(self, 
+                 keywords: List[str] = None,
+                 time_window: str = "24h",
+                 crisis_threshold: float = 0.7):
+        self.keywords = keywords or ["brand", "product", "service"]
+        self.time_window = time_window
+        self.crisis_threshold = crisis_threshold
+\end{lstlisting}
+
+\subsubsection{Agent Creation}
+\begin{lstlisting}[language=Python]
+def create_research_agent(config: TaskConfig) -> Agent:
+    return Agent(
+        role="Social Media Researcher",
+        goal="Gather comprehensive data about brand presence",
+        backstory="Expert in social media research and data collection",
+        tools=[twitter_tool, web_crawler, social_media_search]
+    )
+\end{lstlisting}
+
+\subsection{Task Implementation}
+The task pipeline is implemented through a series of interconnected tasks:
+
+\subsubsection{Research Task}
+\begin{lstlisting}[language=Python]
+def create_research_task(config: TaskConfig) -> Task:
+    return Task(
+        description="""
+        Conduct systematic investigation of brand's online presence:
+        1. Social Media Content
+        2. News Coverage
+        3. Market Intelligence
+        4. Brand Performance
+        """,
+        expected_output="""
+        Comprehensive research report with:
+        1. Key events and trends
+        2. Raw social media data
+        3. Historical sentiment data
+        4. Competitor analysis
+        """
+    )
+\end{lstlisting}
+
+\subsubsection{Monitoring Task}
+\begin{lstlisting}[language=Python]
+def create_monitoring_task(config: TaskConfig) -> Task:
+    return Task(
+        description="""
+        Monitor social media metrics:
+        1. Volume metrics
+        2. Engagement metrics
+        3. Reach metrics
+        4. Performance metrics
+        """,
+        expected_output="""
+        Detailed monitoring report with:
+        1. Volume analysis
+        2. Engagement insights
+        3. Performance benchmarks
+        4. Competitive analysis
+        """
+    )
+\end{lstlisting}
+
+\subsection{Crisis Detection}
+The crisis detection system implements sophisticated algorithms for identifying potential crises:
+
+\subsubsection{Crisis Signal Detection}
+\begin{lstlisting}[language=Python]
+def detect_crisis_signals(sentiment_result: Dict) -> bool:
+    # Extract key metrics
+    sentiment_trend = sentiment_result.get("sentiment_trend", "")
+    engagement_spike = sentiment_result.get("engagement_spike", False)
+    viral_content = sentiment_result.get("viral_content", False)
+    
+    # Define crisis conditions
+    crisis_conditions = [
+        "High negative sentiment" in sentiment_trend,
+        "Urgent issues mentioned" in sentiment_trend,
+        "Viral content detected" in sentiment_trend,
+        engagement_spike,
+        viral_content
+    ]
+    
+    return any(crisis_conditions)
+\end{lstlisting}
+
+\subsection{Data Processing}
+The system implements efficient data processing techniques:
+
+\subsubsection{Sentiment Analysis}
+\begin{lstlisting}[language=Python]
+def analyze_sentiment(text: str) -> Dict:
+    return {
+        "basic_sentiment": classify_sentiment(text),
+        "emotions": detect_emotions(text),
+        "aspects": analyze_aspects(text),
+        "themes": identify_themes(text)
+    }
+\end{lstlisting}
+
+\subsubsection{Data Collection}
+\begin{lstlisting}[language=Python]
+def collect_social_media_data(platform: str, query: str) -> List[Dict]:
+    tools = {
+        "twitter": twitter_tool,
+        "web": web_crawler,
+        "social": social_media_search
+    }
+    return tools[platform].search(query)
+\end{lstlisting}
+
+\subsection{Error Handling}
+The implementation includes robust error handling:
+
+\subsubsection{Exception Management}
+\begin{lstlisting}[language=Python]
+def safe_execute(func: Callable, *args, **kwargs) -> Any:
+    try:
+        return func(*args, **kwargs)
+    except Exception as e:
+        logger.error(f"Error in {func.__name__}: {str(e)}")
+        return None
+\end{lstlisting}
+
+\subsection{Performance Optimization}
+The system implements several optimization techniques:
+
+\subsubsection{Caching}
+\begin{lstlisting}[language=Python]
+@lru_cache(maxsize=1000)
+def get_cached_data(key: str) -> Dict:
+    return fetch_data(key)
+\end{lstlisting}
+
+\subsubsection{Parallel Processing}
+\begin{lstlisting}[language=Python]
+def process_data_parallel(data: List[Dict]) -> List[Dict]:
+    with ThreadPoolExecutor() as executor:
+        return list(executor.map(process_item, data))
+\end{lstlisting}
+
+This implementation provides a robust and efficient system for social media monitoring and crisis detection, with careful attention to performance, error handling, and maintainability. 
